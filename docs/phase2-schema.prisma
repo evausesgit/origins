@@ -1,0 +1,106 @@
+// ORIGINES — proposed PostgreSQL schema for phase 2 (contributions, AI pre-analysis, moderation, versions).
+// Design document: not wired into the app yet. Mirrors src/data/types.ts so phase-1 dossiers can be imported as-is.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Dossier {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  rootId    String
+  data      Json // accusation, intro, narration (localized)
+  nodes     Node[]
+  sources   Source[]
+  updatedAt DateTime @updatedAt
+}
+
+model Node {
+  id          String       @id // stable, used in URLs
+  dossierId   String
+  dossier     Dossier      @relation(fields: [dossierId], references: [id])
+  parentId    String?
+  kind        String // concept | claim | event | source | evidence | person | interpretation | conclusion | question
+  content     Json // title, short, summary, date, place, reading, locator (localized)
+  status      String?
+  sourceId    String?
+  versions    AssessmentVersion[]
+  outgoing    Relation[]   @relation("from")
+  incoming    Relation[]   @relation("to")
+  contributions Contribution[]
+}
+
+model Relation {
+  id            String   @id @default(cuid())
+  fromId        String
+  toId          String
+  from          Node     @relation("from", fields: [fromId], references: [id])
+  to            Node     @relation("to", fields: [toId], references: [id])
+  type          String
+  justification Json
+  sourceIds     String[]
+}
+
+model Source {
+  id           String   @id
+  dossierId    String
+  dossier      Dossier  @relation(fields: [dossierId], references: [id])
+  meta         Json // title, author, date, nature, provenance, holding, language, edition, url, quote
+  verification Json // status, checkedOn, note
+  derivedFrom  String[]
+  fileKey      String? // S3 object key for an uploaded document (never served without review)
+}
+
+/// Every published change of a conclusion is a new row: the history is append-only.
+model AssessmentVersion {
+  id         String   @id @default(cuid())
+  nodeId     String
+  node       Node     @relation(fields: [nodeId], references: [id])
+  status     String
+  confidence String
+  body       Json // favorable, contrary, limits, reasoning (localized)
+  note       Json // why it changed
+  reviewerId String
+  createdAt  DateTime @default(now())
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  role          String         @default("contributor") // contributor | editor | admin
+  contributions Contribution[]
+  reviews       Review[]
+}
+
+/// A submitted source. Never changes a published conclusion by itself.
+model Contribution {
+  id          String   @id @default(cuid())
+  nodeId      String
+  node        Node     @relation(fields: [nodeId], references: [id])
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  stance      String // supports | contradicts | contextualizes
+  url         String?
+  fileKey     String? // quarantined upload (type/size checked, scanned)
+  comment     String
+  analysis    Json? // AI pre-analysis: levels A/B/C + criteria 1–9, model id, prompt version
+  status      String   @default("pending") // pending | analysed | accepted | rejected
+  reviews     Review[]
+  createdAt   DateTime @default(now())
+}
+
+model Review {
+  id             String       @id @default(cuid())
+  contributionId String
+  contribution   Contribution @relation(fields: [contributionId], references: [id])
+  reviewerId     String
+  reviewer       User         @relation(fields: [reviewerId], references: [id])
+  decision       String // accept | reject | needs_work
+  objections     String?
+  createdAt      DateTime     @default(now())
+}
