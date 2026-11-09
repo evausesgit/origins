@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const r = resolve(await params);
   if (!r) return {};
   const title = `${r.source.title} — ${r.source.author}`;
-  return { title, description: r.source.description[r.locale], openGraph: { title, description: r.source.description[r.locale], type: "article" } };
+  return { title, description: r.source.description[r.locale], openGraph: { title, description: r.source.description[r.locale], type: "article", images: [{ url: `/${r.locale}/dossier/${r.dossier.slug}/opengraph-image`, width: 1200, height: 630 }] } };
 }
 
 const verifColor = { verified: "var(--st-established)", partial: "var(--st-plausible)", to_verify: "var(--st-undetermined)" } as const;
