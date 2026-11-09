@@ -43,7 +43,7 @@ export function MobileFocus({ index, locale, focusId, onNavigate, onDetails }: {
           >
             <div className="flex items-center justify-between text-[0.7rem]">
               <span className="smallcaps font-semibold" style={{ color: kindColor(focus.kind) }}>
-                {focus.parent ? t.kind[focus.kind] : t.home.firstDossier}
+                {focus.parent ? t.kind[focus.kind] : t.explorer.dossier}
               </span>
               {focus.date && <span className="text-muted">{focus.date.label[locale]}</span>}
             </div>

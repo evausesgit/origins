@@ -18,10 +18,12 @@ const linkStyle: Record<SpreadLinkKind, { stroke: string; dash?: string; width: 
   similarity: { stroke: "var(--muted)", dash: "2 5", width: 1.4 },
 };
 
+const placeShort = (name: string) => name.split(" (")[0];
+
 export function GeoMap({ index, locale, onSelect, selectedId }: { index: GraphIndex; locale: Locale; onSelect: (id: string) => void; selectedId?: string }) {
   const t = getDictionary(locale);
   const [land, setLand] = useState<FeatureCollection<Geometry> | null>(null);
-  const player = useYearPlayer(1980 - 10);
+  const player = useYearPlayer(index.dossier.timeline);
   const { year } = player;
 
   useEffect(() => {
@@ -38,35 +40,48 @@ export function GeoMap({ index, locale, onSelect, selectedId }: { index: GraphIn
     };
   }, []);
 
-  const projection = useMemo(
-    () =>
-      geoConicConformal()
-        .parallels([43, 62])
-        .rotate([-5, 0])
-        .fitExtent(
-          [
-            [20, 20],
-            [W - 20, H - 20],
-          ],
-          {
-            type: "MultiPoint",
-            coordinates: [
-              [-6.5, 54.5],
-              [14.5, 54.5],
-              [-3, 43.5],
-              [13.5, 44.2],
-            ],
-          },
-        ),
-    [],
-  );
-  const path = useMemo(() => geoPath(projection), [projection]);
-
-  const events = index.dossier.nodes.filter((n) => n.kind === "event" && n.place && n.date && n.parent !== "e-trent" && n.parent !== "b-origins");
-  // Represent the Norwich cluster by the death event; Trent sub-events are folded into Trent.
-  const norwich = index.byId.get("o-death")!;
-  const points = [norwich, ...events];
+  // One point per place (earliest event wins); sub-events of an event are folded into it.
+  const points = useMemo(() => {
+    const seen = new Set<string>();
+    return index.dossier.nodes
+      .filter((n) => n.kind === "event" && n.place && n.date && index.byId.get(n.parent ?? "")?.kind !== "event")
+      .sort((a, b) => a.date!.year - b.date!.year)
+      .filter((n) => {
+        const key = n.place!.name.en;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [index]);
   const placeless = index.dossier.nodes.filter((n) => n.kind === "event" && !n.place && n.date);
+
+  // Frame the dossier's places, with a margin so that labels and context fit.
+  const projection = useMemo(() => {
+    const lons = points.map((p) => p.place!.lon);
+    const lats = points.map((p) => p.place!.lat);
+    const [minLon, maxLon, minLat, maxLat] = [Math.min(...lons), Math.max(...lons), Math.min(...lats), Math.max(...lats)];
+    const padLon = Math.max(3, (maxLon - minLon) * 0.18);
+    const padLat = Math.max(2, (maxLat - minLat) * 0.18);
+    return geoConicConformal()
+      .parallels([minLat, maxLat + 0.01])
+      .rotate([-(minLon + maxLon) / 2, 0])
+      .fitExtent(
+        [
+          [20, 20],
+          [W - 20, H - 20],
+        ],
+        {
+          type: "MultiPoint",
+          coordinates: [
+            [minLon - padLon, minLat - padLat],
+            [maxLon + padLon, minLat - padLat],
+            [minLon - padLon, maxLat + padLat],
+            [maxLon + padLon, maxLat + padLat],
+          ],
+        },
+      );
+  }, [points]);
+  const path = useMemo(() => geoPath(projection), [projection]);
 
   const xy = (id: string) => {
     const n = index.byId.get(id);
@@ -132,7 +147,7 @@ export function GeoMap({ index, locale, onSelect, selectedId }: { index: GraphIn
                 if (!p) return null;
                 const shown = n.date!.year <= year;
                 const sel = selectedId === n.id;
-                const label = n.id === "o-death" ? `Norwich ${n.date!.year}` : `${n.title[locale]} ${n.date!.year}`;
+                const label = `${placeShort(n.place!.name[locale])} ${n.date!.year}`;
                 const left = p[0] > W - 160;
                 return (
                   <g
@@ -187,7 +202,7 @@ export function GeoMap({ index, locale, onSelect, selectedId }: { index: GraphIn
               {index.dossier.spread.map((s, i) => (
                 <li key={i} className="text-xs text-ink-2">
                   <span className="font-medium text-ink">
-                    {index.byId.get(s.from)!.id === "o-death" ? "Norwich" : index.byId.get(s.from)!.title[locale]} → {index.byId.get(s.to)!.title[locale]}
+                    {placeShort(index.byId.get(s.from)!.place!.name[locale])} → {placeShort(index.byId.get(s.to)!.place!.name[locale])}
                   </span>
                   <br />
                   {s.note[locale]}

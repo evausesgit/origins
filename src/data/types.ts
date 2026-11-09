@@ -162,9 +162,22 @@ export interface NarrationStep {
   text: L;
 }
 
+/** Scale of the timeline. `break` compresses everything after it into the last 14 % (long gaps). */
+export interface TimelineScale {
+  min: number;
+  max: number;
+  break?: number;
+  ticks: number[];
+}
+
 export interface Dossier {
   slug: string;
   rootId: string;
+  /** Short name, e.g. "Norwich, 1144". */
+  title: L;
+  /** Period covered, e.g. "1144 – 1475". */
+  period: L;
+  timeline: TimelineScale;
   /** The claim as it circulates. */
   accusation: L;
   intro: L;

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { StatusBadge, StatusGlyph } from "@/components/Status";
-import { dossiers, indexDossier } from "@/data";
+import { dossiers, indexDossier, type Dossier } from "@/data";
+import type { Locale } from "@/data/types";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { computeLayout } from "@/lib/layout";
 import { kindColor, statusColor } from "@/lib/theme";
@@ -11,15 +12,17 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const t = getDictionary(lang);
-  const dossier = dossiers[0];
-  const index = indexDossier(dossier);
-  const root = index.byId.get(dossier.rootId)!;
-  const base = `/${lang}/dossier/${dossier.slug}`;
-  const claims = dossier.nodes.filter((n) => n.kind === "claim");
-  const events = dossier.nodes
-    .filter((n) => n.kind === "event" && n.date && n.place)
-    .sort((a, b) => a.date!.year - b.date!.year)
-    .filter((n, i, arr) => arr.findIndex((m) => m.title[lang] === n.title[lang]) === i);
+  const q = (s: string) => (lang === "fr" ? `« ${s} »` : `“${s}”`);
+
+  // Path B: one timeline across every dossier, one entry per place and year.
+  const events = dossiers
+    .flatMap((d) =>
+      d.nodes
+        .filter((n) => n.kind === "event" && n.date && n.place)
+        .map((n) => ({ d, n })),
+    )
+    .sort((a, b) => a.n.date!.year - b.n.date!.year)
+    .filter(({ n }, i, arr) => arr.findIndex((m) => m.n.place!.name.en === n.place!.name.en && m.n.date!.year === n.date!.year) === i);
 
   return (
     <>
@@ -31,31 +34,11 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-2">{t.home.lead}</p>
         </section>
 
-        {/* First dossier */}
-        <section id="dossiers" className="mx-auto max-w-[1200px] scroll-mt-20 px-4 sm:px-6">
-          <div className="grid overflow-hidden rounded-[1.75rem] border border-rule bg-card shadow-[0_30px_80px_-50px_rgba(60,45,20,0.55)] lg:grid-cols-[1.05fr_1fr]">
-            <div className="flex flex-col p-6 sm:p-10">
-              <p className="smallcaps text-xs font-semibold text-muted">{t.home.firstDossier} · Norwich 1144</p>
-              <p className="mt-4 font-serif text-lg italic text-muted">{dossier.accusation[lang]}</p>
-              <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-ink sm:text-[2.6rem]">{root.title[lang]}</h2>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted">{t.home.verdict}</span>
-                <StatusBadge status={root.status!} locale={lang} size="lg" />
-              </div>
-              <p className="mt-4 leading-relaxed text-ink-2">{root.summary[lang]}</p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link href={base} className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-ink-2">
-                  {t.home.explore} →
-                </Link>
-                <Link href={`${base}#narration`} className="rounded-full border border-ink/20 px-6 py-3 text-sm font-medium text-ink hover:bg-paper-2">
-                  ▶ {t.home.understand3}
-                </Link>
-              </div>
-            </div>
-            <Link href={base} aria-label={t.home.explore} className="relative hidden min-h-[420px] border-l border-rule-2 bg-paper-2/40 lg:block">
-              <MiniMap lang={lang} />
-            </Link>
-          </div>
+        {/* Dossiers */}
+        <section id="dossiers" className="mx-auto max-w-[1200px] scroll-mt-20 space-y-8 px-4 sm:px-6">
+          {dossiers.map((d) => (
+            <DossierCard key={d.slug} d={d} lang={lang} />
+          ))}
         </section>
 
         {/* Two paths */}
@@ -64,33 +47,46 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             <p className="smallcaps text-xs font-semibold text-accent">A</p>
             <h2 className="font-serif text-2xl font-semibold text-ink">{t.home.pathA}</h2>
             <p className="mt-1 text-sm text-ink-2">{t.home.pathADesc}</p>
-            <ul className="mt-5 divide-y divide-rule-2">
-              {claims.map((c) => (
-                <li key={c.id}>
-                  <Link href={`${base}/${c.id}`} className="group flex items-start gap-3 py-3">
-                    <span className="mt-1.5"><StatusGlyph status={c.status!} /></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-serif text-[1.05rem] leading-snug text-ink group-hover:underline">{lang === "fr" ? `« ${c.title[lang]} »` : `“${c.title[lang]}”`}</span>
-                      <span className="text-xs font-medium" style={{ color: statusColor(c.status!) }}>{t.status[c.status!]}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {dossiers.map((d) => (
+              <div key={d.slug} className="mt-5">
+                <h3 className="smallcaps text-xs font-semibold text-muted">{d.title[lang]}</h3>
+                <ul className="divide-y divide-rule-2">
+                  {d.nodes
+                    .filter((n) => n.kind === "claim")
+                    .map((c) => (
+                      <li key={c.id}>
+                        <Link href={`/${lang}/dossier/${d.slug}/${c.id}`} className="group flex items-start gap-3 py-3">
+                          <span className="mt-1.5">
+                            <StatusGlyph status={c.status!} />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-serif text-[1.05rem] leading-snug text-ink group-hover:underline">{q(c.title[lang])}</span>
+                            <span className="text-xs font-medium" style={{ color: statusColor(c.status!) }}>
+                              {t.status[c.status!]}
+                            </span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ))}
           </div>
           <div className="rounded-3xl border border-rule bg-card/70 p-6 sm:p-8">
             <p className="smallcaps text-xs font-semibold text-accent">B</p>
             <h2 className="font-serif text-2xl font-semibold text-ink">{t.home.pathB}</h2>
             <p className="mt-1 text-sm text-ink-2">{t.home.pathBDesc}</p>
             <ol className="relative mt-5 space-y-1 border-l border-rule pl-5">
-              {events.map((e) => (
-                <li key={e.id} className="relative">
+              {events.map(({ d, n: e }) => (
+                <li key={`${d.slug}-${e.id}`} className="relative">
                   <span className="absolute -left-[1.6rem] top-[0.95rem] size-2.5 rounded-full border-2 border-card" style={{ background: kindColor("event") }} aria-hidden />
-                  <Link href={`${base}/${e.id}`} className="group flex items-baseline gap-4 py-2">
+                  <Link href={`/${lang}/dossier/${d.slug}/${e.id}`} className="group flex items-baseline gap-4 py-2">
                     <span className="w-12 shrink-0 font-serif text-lg tabular-nums text-ink">{e.date!.year}</span>
                     <span className="min-w-0">
-                      <span className="block text-ink group-hover:underline">{e.place!.name[lang]}</span>
-                      {e.short && <span className="block text-xs text-muted">{e.short[lang]}</span>}
+                      <span className="block text-ink group-hover:underline">
+                        {e.place!.name[lang].split(" (")[0]} — {e.title[lang]}
+                      </span>
+                      <span className="block text-xs text-muted">{d.title[lang]}</span>
                     </span>
                   </Link>
                 </li>
@@ -122,25 +118,58 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           </div>
         </section>
       </main>
-      <SiteFooter locale={lang} updated={dossier.updated} />
+      <SiteFooter locale={lang} updated={dossiers.map((d) => d.updated).sort().at(-1)} />
     </>
   );
 }
 
-/** Static, decorative preview of the map's first level (same layout as the explorer). */
-function MiniMap({ lang }: { lang: "fr" | "en" }) {
-  const dossier = dossiers[0];
-  const index = indexDossier(dossier);
+function DossierCard({ d, lang }: { d: Dossier; lang: Locale }) {
+  const t = getDictionary(lang);
+  const root = d.nodes.find((n) => n.id === d.rootId)!;
+  const base = `/${lang}/dossier/${d.slug}`;
+  return (
+    <article className="grid overflow-hidden rounded-[1.75rem] border border-rule bg-card shadow-[0_30px_80px_-50px_rgba(60,45,20,0.55)] lg:grid-cols-[1.05fr_1fr]">
+      <div className="flex flex-col p-6 sm:p-10">
+        <p className="smallcaps text-xs font-semibold text-muted">
+          {t.explorer.dossier} · {d.title[lang]} · {d.period[lang]}
+        </p>
+        <p className="mt-4 font-serif text-lg italic text-muted">{d.accusation[lang]}</p>
+        <h2 className="mt-3 font-serif text-3xl font-semibold leading-tight text-ink sm:text-[2.6rem]">{root.title[lang]}</h2>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted">{t.home.verdict}</span>
+          <StatusBadge status={root.status!} locale={lang} size="lg" />
+        </div>
+        <p className="mt-4 leading-relaxed text-ink-2">{root.summary[lang]}</p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href={base} className="rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper hover:bg-ink-2">
+            {t.home.explore} →
+          </Link>
+          <Link href={`${base}#narration`} className="rounded-full border border-ink/20 px-6 py-3 text-sm font-medium text-ink hover:bg-paper-2">
+            ▶ {t.home.understand3}
+          </Link>
+        </div>
+      </div>
+      <Link href={base} aria-label={t.home.explore} className="relative hidden min-h-[420px] border-l border-rule-2 bg-paper-2/40 lg:block">
+        <MiniMap d={d} lang={lang} />
+      </Link>
+    </article>
+  );
+}
+
+/** Static, decorative preview of a dossier's first level (same layout as the explorer). */
+function MiniMap({ d, lang }: { d: Dossier; lang: Locale }) {
+  const t = getDictionary(lang);
+  const index = indexDossier(d);
   const layout = computeLayout(index);
-  const branches = index.children.get(dossier.rootId) ?? [];
-  const R = 1;
+  const branches = index.children.get(d.rootId) ?? [];
   const pts = branches.map((b) => layout.get(b.id)!);
   const max = Math.max(...pts.map((p) => Math.hypot(p.x, p.y)));
   const k = 150 / max;
+  const root = index.byId.get(d.rootId)!;
   return (
     <svg viewBox="-260 -230 520 460" className="absolute inset-0 h-full w-full" aria-hidden>
       {pts.map((p, i) => (
-        <line key={i} x1={0} y1={0} x2={p.x * k * R} y2={p.y * k * R} stroke="var(--rule)" strokeWidth={1} />
+        <line key={i} x1={0} y1={0} x2={p.x * k} y2={p.y * k} stroke="var(--rule)" strokeWidth={1} />
       ))}
       {pts.map((p, i) => {
         const b = branches[i];
@@ -165,12 +194,12 @@ function MiniMap({ lang }: { lang: "fr" | "en" }) {
           </g>
         );
       })}
-      <rect x={-78} y={-24} width={156} height={48} rx={12} fill="var(--card)" stroke="var(--ink-2)" />
+      <rect x={-82} y={-24} width={164} height={48} rx={12} fill="var(--card)" stroke="var(--ink-2)" />
       <text x={0} y={-3} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--ink)" className="font-serif">
-        Norwich, 1144
+        {d.title[lang]}
       </text>
-      <text x={0} y={13} textAnchor="middle" fontSize={8.5} fontWeight={600} fill="var(--st-refuted)">
-        {getDictionary(lang).status[index.byId.get(dossier.rootId)!.status!]}
+      <text x={0} y={13} textAnchor="middle" fontSize={8.5} fontWeight={600} fill={statusColor(root.status!)}>
+        {t.status[root.status!]}
       </text>
     </svg>
   );

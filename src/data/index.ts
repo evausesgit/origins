@@ -1,9 +1,10 @@
+import { judeoBolchevisme } from "./dossiers/judeo-bolchevisme";
 import { norwich1144 } from "./dossiers/norwich-1144";
 import type { Dossier, GraphNode, Locale, Relation, Source } from "./types";
 
 export * from "./types";
 
-export const dossiers: Dossier[] = [norwich1144];
+export const dossiers: Dossier[] = [norwich1144, judeoBolchevisme];
 
 export function getDossier(slug: string): Dossier | undefined {
   return dossiers.find((d) => d.slug === slug);

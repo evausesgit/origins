@@ -2,20 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GraphIndex } from "@/data";
-import type { GraphNode, Locale } from "@/data/types";
+import type { GraphNode, Locale, TimelineScale } from "@/data/types";
 import { StatusGlyph } from "@/components/Status";
 import { getDictionary } from "@/lib/i18n";
 import { kindColor } from "@/lib/theme";
 
-const MIN = 1130;
 const AXIS_Y = 76;
 const LABEL_W = 190;
-const BREAK = 1500;
-const MAX = 1980;
-/** Piecewise scale: the Middle Ages get most of the width, the modern era is compressed. */
-export function yearToPct(y: number) {
-  if (y <= BREAK) return ((y - MIN) / (BREAK - MIN)) * 86;
-  return 86 + ((y - BREAK) / (MAX - BREAK)) * 14;
+
+/** Linear scale, or piecewise when the dossier spans a long empty gap. */
+export function yearToPct(y: number, sc: TimelineScale) {
+  if (!sc.break) return ((y - sc.min) / (sc.max - sc.min)) * 100;
+  if (y <= sc.break) return ((y - sc.min) / (sc.break - sc.min)) * 86;
+  return 86 + ((y - sc.break) / (sc.max - sc.break)) * 14;
 }
 
 export function datedEvents(index: GraphIndex): GraphNode[] {
@@ -24,8 +23,8 @@ export function datedEvents(index: GraphIndex): GraphNode[] {
     .sort((a, b) => a.date!.year - b.date!.year);
 }
 
-export function useYearPlayer(initial: number) {
-  const [year, setYear] = useState(initial);
+export function useYearPlayer(sc: TimelineScale) {
+  const [year, setYear] = useState(sc.max);
   const [playing, setPlaying] = useState(false);
   const raf = useRef<number | null>(null);
   useEffect(() => {
@@ -35,12 +34,12 @@ export function useYearPlayer(initial: number) {
       const dt = now - last;
       last = now;
       setYear((y) => {
-        // ~ 9 s for the Middle Ages, faster afterwards
-        const speed = y < BREAK ? 40 : 160;
+        // ~ 10 s for the main period, ~ 3 s for a compressed tail
+        const speed = sc.break ? (y < sc.break ? (sc.break - sc.min) / 10 : (sc.max - sc.break) / 3) : (sc.max - sc.min) / 10;
         const next = y + (dt / 1000) * speed;
-        if (next >= MAX - 10) {
+        if (next >= sc.max) {
           setPlaying(false);
-          return MAX - 10;
+          return sc.max;
         }
         return next;
       });
@@ -50,17 +49,17 @@ export function useYearPlayer(initial: number) {
     return () => {
       if (raf.current) cancelAnimationFrame(raf.current);
     };
-  }, [playing]);
-  return { year, setYear, playing, setPlaying };
+  }, [playing, sc]);
+  return { year, setYear, playing, setPlaying, sc };
 }
 
-export function YearSlider({ year, setYear, playing, setPlaying, locale }: ReturnType<typeof useYearPlayer> & { locale: Locale }) {
+export function YearSlider({ year, setYear, playing, setPlaying, sc, locale }: ReturnType<typeof useYearPlayer> & { locale: Locale }) {
   const t = getDictionary(locale);
   return (
     <div className="flex items-center gap-3">
       <button
         onClick={() => {
-          if (!playing && year >= MAX - 11) setYear(MIN + 10);
+          if (!playing && year >= sc.max - 1) setYear(sc.min);
           setPlaying(!playing);
         }}
         className="shrink-0 rounded-full border border-rule bg-card px-3 py-1.5 text-xs font-medium text-ink-2 hover:bg-paper-2"
@@ -71,8 +70,8 @@ export function YearSlider({ year, setYear, playing, setPlaying, locale }: Retur
         <span className="sr-only">{t.timeline.upTo}</span>
         <input
           type="range"
-          min={MIN + 10}
-          max={MAX - 10}
+          min={sc.min}
+          max={sc.max}
           step={1}
           value={Math.round(year)}
           onChange={(e) => {
@@ -92,11 +91,12 @@ export function YearSlider({ year, setYear, playing, setPlaying, locale }: Retur
 
 export function Timeline({ index, locale, onSelect, selectedId }: { index: GraphIndex; locale: Locale; onSelect: (id: string) => void; selectedId?: string }) {
   const t = getDictionary(locale);
-  const player = useYearPlayer(MAX - 10);
+  const sc = index.dossier.timeline;
+  const player = useYearPlayer(sc);
   const { year } = player;
   const events = useMemo(() => datedEvents(index).filter((e) => e.kind === "event"), [index]);
-  const bands = useMemo(() => index.dossier.nodes.filter((n) => n.kind === "concept" && n.date && n.parent === "b-spread"), [index]);
-  const ticks = [1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500, 1965];
+  const bands = useMemo(() => index.dossier.nodes.filter((n) => n.kind === "concept" && n.date), [index]);
+  const ticks = sc.ticks;
   const visible = events.filter((e) => e.date!.year <= year);
 
   // Spread axis labels over lanes so they never overlap, using the real width.
@@ -112,7 +112,7 @@ export function Timeline({ index, locale, onSelect, selectedId }: { index: Graph
   const placed = useMemo(() => {
     const laneEnds: number[] = [];
     return events.map((e) => {
-      const x = (yearToPct(e.date!.year) / 100) * width;
+      const x = (yearToPct(e.date!.year, sc) / 100) * width;
       const w = Math.min(LABEL_W, e.title[locale].length * 6.6 + 24);
       const left = Math.min(Math.max(0, x - 6), width - w);
       let lane = laneEnds.findIndex((end) => end + 6 < left);
@@ -120,7 +120,7 @@ export function Timeline({ index, locale, onSelect, selectedId }: { index: Graph
       laneEnds[lane] = left + w;
       return { e, lane, left };
     });
-  }, [events, width, locale]);
+  }, [events, width, locale, sc]);
   const lanesUsed = Math.max(1, ...placed.map((p) => p.lane + 1));
 
   return (
@@ -143,7 +143,7 @@ export function Timeline({ index, locale, onSelect, selectedId }: { index: Graph
                 className="absolute h-6 rounded-full transition-opacity duration-500"
                 style={{
                   top: i * 30,
-                  left: `${yearToPct(start)}%`,
+                  left: `${yearToPct(start, sc)}%`,
                   right: 0,
                   opacity: shown ? 1 : 0,
                   background: `linear-gradient(90deg, color-mix(in srgb, var(--k-concept) 14%, transparent), color-mix(in srgb, var(--k-concept) 4%, transparent))`,
@@ -154,9 +154,9 @@ export function Timeline({ index, locale, onSelect, selectedId }: { index: Graph
             );
           })}
           <div className="absolute inset-x-0 h-px bg-rule" style={{ top: AXIS_Y }} />
-          <div className="absolute h-2 w-px bg-rule" style={{ left: "86%", top: AXIS_Y - 4 }} />
+          {sc.break && <div className="absolute h-2 w-px bg-rule" style={{ left: "86%", top: AXIS_Y - 4 }} />}
           {ticks.map((y) => (
-            <div key={y} className="absolute -translate-x-1/2 text-[0.7rem] tabular-nums text-muted" style={{ left: `${yearToPct(y)}%`, top: AXIS_Y + 6 }}>
+            <div key={y} className="absolute -translate-x-1/2 text-[0.7rem] tabular-nums text-muted" style={{ left: `${yearToPct(y, sc)}%`, top: AXIS_Y + 6 }}>
               {y}
             </div>
           ))}
@@ -165,8 +165,8 @@ export function Timeline({ index, locale, onSelect, selectedId }: { index: Graph
             const top = AXIS_Y + 28 + lane * 30;
             return (
               <div key={e.id} className="transition-opacity duration-500" style={{ opacity: shown ? 1 : 0 }}>
-                <span className="absolute w-px bg-rule" style={{ left: `${yearToPct(e.date!.year)}%`, top: AXIS_Y - 3, height: top - AXIS_Y + 3 }} />
-                <span className="absolute size-1.5 -translate-x-1/2 rounded-full" style={{ left: `${yearToPct(e.date!.year)}%`, top: AXIS_Y - 3, background: kindColor(e.kind) }} />
+                <span className="absolute w-px bg-rule" style={{ left: `${yearToPct(e.date!.year, sc)}%`, top: AXIS_Y - 3, height: top - AXIS_Y + 3 }} />
+                <span className="absolute size-1.5 -translate-x-1/2 rounded-full" style={{ left: `${yearToPct(e.date!.year, sc)}%`, top: AXIS_Y - 3, background: kindColor(e.kind) }} />
                 <button
                   onClick={() => onSelect(e.id)}
                   tabIndex={-1}

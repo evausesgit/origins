@@ -28,7 +28,7 @@ export default async function Image({ params }: { params: Promise<{ lang: string
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 28 }}>
           <div style={{ display: "flex", padding: "10px 26px", borderRadius: 999, border: "2px solid #8b2d2d", color: "#8b2d2d" }}>{status}</div>
-          <div style={{ color: "#4a463d" }}>{locale === "fr" ? "Norwich 1144 · Trente 1475" : "Norwich 1144 · Trent 1475"}</div>
+          <div style={{ color: "#4a463d" }}>{dossier ? `${dossier.title[locale]} · ${dossier.period[locale]}` : ""}</div>
         </div>
       </div>
     ),

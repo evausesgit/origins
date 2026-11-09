@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ancestry, dossiers, indexDossier, sourceLineage } from "@/data";
 import { LOCALES, RELATION_TYPES, STATUSES, type L } from "@/data/types";
 import { dictionaries } from "@/lib/i18n";
-import { CARD_HEIGHT, CARD_WIDTH, computeLayout, visibleIds } from "@/lib/layout";
+import { CARD_WIDTH, computeLayout, visibleIds } from "@/lib/layout";
 
 const isL = (v: unknown): v is L => typeof v === "object" && v !== null && LOCALES.every((l) => typeof (v as L)[l] === "string");
 
@@ -122,7 +122,7 @@ describe.each(dossiers.map((d) => [d.slug, d] as const))("dossier %s", (_slug, d
         for (let j = i + 1; j < vis.length; j++) {
           const a = vis[i], b = vis[j];
           const dx = Math.abs(a.x - b.x) - (CARD_WIDTH * (a.scale + b.scale)) / 2;
-          const dy = Math.abs(a.y - b.y) - (CARD_HEIGHT * (a.scale + b.scale)) / 2;
+          const dy = Math.abs(a.y - b.y) - (a.h + b.h) / 2;
           if (dx < 0 && dy < 0) overlaps.push(`${focus.id}: ${a.id} × ${b.id}`);
         }
     }

@@ -62,7 +62,7 @@ function MindNodeImpl({ data }: NodeProps<MindFlowNode>) {
         <span aria-hidden className="absolute inset-y-0 left-0" style={{ width: "0.3em", background: accent }} />
         <div className="flex items-center justify-between gap-[0.5em]" style={{ fontSize: "0.72em" }}>
           <span className="smallcaps font-semibold" style={{ color: kindColor(node.kind) }}>
-            {isRoot ? t.home.firstDossier : depth === 1 ? "" : t.kind[node.kind]}
+            {isRoot ? t.explorer.dossier : depth === 1 ? "" : t.kind[node.kind]}
           </span>
           {node.date && <span className="tabular-nums text-muted">{node.date.label[locale]}</span>}
         </div>

@@ -24,6 +24,7 @@ const fr = {
     lead:
       "Choisissez une affirmation. ORIGINES vous montre d'où elle vient, comment elle a voyagé et ce que les documents permettent réellement d'en dire — en distinguant toujours ce qui est établi de ce qui reste inconnu.",
     firstDossier: "Premier dossier",
+    dossiers: "Les dossiers",
     explore: "Explorer la carte",
     understand3: "Comprendre en 3 minutes",
     pathA: "Partir d'une croyance",
@@ -61,6 +62,7 @@ const fr = {
     legend: "Légende",
     zoomHint: "Cliquez sur une branche pour zoomer. Pincez ou faites défiler pour vous déplacer librement.",
     mindmapLabel: "Carte mentale interactive du dossier",
+    dossier: "Dossier",
   },
   panel: {
     assessment: "Évaluation",
@@ -256,6 +258,7 @@ const en: Dictionary = {
     lead:
       "Pick a claim. ORIGINES shows you where it comes from, how it travelled and what the documents really allow us to say about it — always separating what is established from what remains unknown.",
     firstDossier: "First dossier",
+    dossiers: "The investigations",
     explore: "Explore the map",
     understand3: "Understand in 3 minutes",
     pathA: "Start from a belief",
@@ -293,6 +296,7 @@ const en: Dictionary = {
     legend: "Legend",
     zoomHint: "Click a branch to zoom in. Pinch or scroll to move around freely.",
     mindmapLabel: "Interactive mind map of the dossier",
+    dossier: "Investigation",
   },
   panel: {
     assessment: "Assessment",

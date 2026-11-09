@@ -152,6 +152,9 @@ const narration: NarrationStep[] = [
 export const norwich1144: Dossier = {
   slug: "norwich-1144",
   rootId: "q",
+  title: l("Norwich, 1144", "Norwich, 1144"),
+  period: l("1144 – 1475", "1144 – 1475"),
+  timeline: { min: 1130, break: 1500, max: 1980, ticks: [1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500, 1965] },
   accusation: l(
     "« Les Juifs pratiquaient des rites sataniques impliquant le meurtre d'enfants. »",
     "'Jews practised satanic rites involving the murder of children.'",

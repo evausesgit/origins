@@ -1,4 +1,5 @@
 import type { GraphIndex } from "@/data";
+import type { GraphNode } from "@/data/types";
 
 /**
  * "Fractal" radial layout.
@@ -23,6 +24,8 @@ export function scaleForDepth(depth: number): number {
 
 export interface LayoutNode {
   id: string;
+  /** Estimated card height in world units (already multiplied by `scale`). */
+  h: number;
   x: number; // centre
   y: number; // centre
   depth: number;
@@ -30,10 +33,33 @@ export interface LayoutNode {
   angle: number; // outward direction from its parent
 }
 
+/**
+ * Rough height of a card at scale 1, from its text (mirrors MindNode's typography:
+ * 16px base, title 1.42em root / 1.22em branch / 1.04em otherwise, short 0.8em).
+ */
+export function estimateHeight(node: GraphNode, depth: number, hasKids: boolean): number {
+  const [titleSize, charsPerLine] = depth === 0 ? [22.7, 17] : depth === 1 ? [19.5, 21] : [16.6, 25];
+  const titleLines = Math.ceil(node.title.en.length / charsPerLine);
+  const shortLines = node.short ? Math.ceil(node.short.en.length / 33) : 0;
+  return (
+    (depth === 0 ? 34 : 25) + // padding
+    16 + // kind label
+    titleLines * titleSize * 1.22 +
+    (shortLines ? shortLines * 17 + 6 : 0) +
+    (node.status || hasKids ? 24 : 0)
+  );
+}
+
 export function computeLayout(index: GraphIndex): Map<string, LayoutNode> {
   const out = new Map<string, LayoutNode>();
   const rootId = index.dossier.rootId;
-  out.set(rootId, { id: rootId, x: 0, y: 0, depth: 0, scale: SCALE[0], angle: -Math.PI / 2 });
+  const heightOf = (id: string, depth: number, scale: number) =>
+    estimateHeight(index.byId.get(id)!, depth, (index.children.get(id)?.length ?? 0) > 0) * scale;
+  const rootH = heightOf(rootId, 0, SCALE[0]);
+  out.set(rootId, { id: rootId, x: 0, y: 0, depth: 0, scale: SCALE[0], angle: -Math.PI / 2, h: rootH });
+  // A tall central question pushes the ring of branches outwards.
+  const ry = Math.max(RING.ry, rootH / 2 + 290);
+  const rx = Math.max(RING.rx, ry * 1.44);
 
   const visit = (parentId: string) => {
     const parent = out.get(parentId)!;
@@ -49,8 +75,8 @@ export function computeLayout(index: GraphIndex): Map<string, LayoutNode> {
       if (d === 0) {
         // Branches evenly around an ellipse, first one at the top.
         a = -Math.PI / 2 + (2 * Math.PI * i) / n;
-        x = RING.rx * Math.cos(a);
-        y = RING.ry * Math.sin(a);
+        x = rx * Math.cos(a);
+        y = ry * Math.sin(a);
       } else {
         // Children fan out around their parent, leaving a gap towards the grandparent.
         const maxArc = d === 1 ? 1.75 * Math.PI : 0.8 * Math.PI;
@@ -58,12 +84,13 @@ export function computeLayout(index: GraphIndex): Map<string, LayoutNode> {
         const arc = d === 1 ? maxArc : Math.min(maxArc, Math.max(needed / ringRadius, n * 0.22 * Math.PI));
         a = n === 1 ? parent.angle : d === 1 ? parent.angle - arc / 2 + (arc * (i + 0.5)) / n : parent.angle - arc / 2 + (arc * i) / (n - 1);
         // Cards are wide rectangles: keep clear of the parent's card in every direction.
-        const clear = halfExtent(parent.scale, a) + halfExtent(childScale, a) + 14 * childScale;
+        const childH = heightOf(kid.id, d + 1, childScale);
+        const clear = halfExtent(parent.scale, parent.h, a) + halfExtent(childScale, childH, a) + 14 * childScale;
         const radius = Math.max(ringRadius, clear);
         x = parent.x + radius * Math.cos(a);
         y = parent.y + radius * Math.sin(a);
       }
-      out.set(kid.id, { id: kid.id, x, y, depth: d + 1, scale: childScale, angle: a });
+      out.set(kid.id, { id: kid.id, x, y, depth: d + 1, scale: childScale, angle: a, h: heightOf(kid.id, d + 1, childScale) });
       visit(kid.id);
     });
   };
@@ -72,9 +99,9 @@ export function computeLayout(index: GraphIndex): Map<string, LayoutNode> {
 }
 
 /** Distance from a card's centre to its edge in direction `a`. */
-function halfExtent(scale: number, a: number): number {
+function halfExtent(scale: number, h: number, a: number): number {
   const hw = (CARD_WIDTH * scale) / 2;
-  const hh = (CARD_HEIGHT * scale) / 2;
+  const hh = h / 2;
   const c = Math.abs(Math.cos(a));
   const s = Math.abs(Math.sin(a));
   return Math.min(c > 1e-6 ? hw / c : Infinity, s > 1e-6 ? hh / s : Infinity);
@@ -91,7 +118,7 @@ export function boundsOf(nodes: LayoutNode[]): Bounds {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const n of nodes) {
     const hw = (CARD_WIDTH * n.scale) / 2;
-    const hh = (CARD_HEIGHT * n.scale) / 2;
+    const hh = n.h / 2;
     minX = Math.min(minX, n.x - hw);
     maxX = Math.max(maxX, n.x + hw);
     minY = Math.min(minY, n.y - hh);
