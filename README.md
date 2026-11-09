@@ -66,4 +66,4 @@ Détails techniques : [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 - Build pack **Dockerfile** (`/Dockerfile`, Node 22, sortie `standalone`, port 3000, utilisateur non-root, healthcheck).
 - `NEXT_PUBLIC_SITE_URL` vaut `https://origines.ia-do-it.com` par défaut (`ARG` du Dockerfile). Si le domaine change, passer la variable **au build** : elle est intégrée aux pages prérendues.
-- Redéployer : `POST /api/v1/applications/{uuid}/start` sur l'API Coolify (pas de webhook automatique).
+- **Déploiement automatique** : chaque push sur `main` déclenche un déploiement (webhook GitHub → Coolify, signé par un secret partagé, événement `push` uniquement). Redéploiement manuel possible : `POST /api/v1/applications/{uuid}/start`.
