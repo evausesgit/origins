@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "story:audio": "uv run --python 3.12 --with kokoro --with soundfile --with \"misaki[en]\" --with pip python scripts/generate_story_audio.py"
   },
   "dependencies": {
     "@xyflow/react": "^12.12.1",

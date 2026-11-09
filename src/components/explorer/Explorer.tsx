@@ -13,7 +13,9 @@ import {
 import "@xyflow/react/dist/style.css";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ancestry, getDossier, indexDossier } from "@/data";
+import { getStory } from "@/data/stories";
 import type { Locale } from "@/data/types";
 import { getDictionary } from "@/lib/i18n";
 import { boundsOf, CARD_HEIGHT, CARD_WIDTH, computeLayout, visibleIds, type Bounds } from "@/lib/layout";
@@ -469,6 +471,11 @@ function ExplorerInner({ locale, slug, initialNodeId }: Props) {
               >
                 <span aria-hidden>▶</span> {t.narration.start}
               </button>
+              {getStory(slug) && (
+                <Link href={`/${locale}/dossier/${slug}/histoire`} className="flex items-center gap-2 rounded-full border border-ink/20 bg-card/90 px-4 py-2.5 text-sm font-medium text-ink shadow-sm backdrop-blur hover:bg-paper-2">
+                  <span aria-hidden>◉</span> {t.story.watch}
+                </Link>
+              )}
               {view === "mindmap" && (
                 <button onClick={() => setLegendOpen((o) => !o)} aria-expanded={legendOpen} className="rounded-full border border-rule bg-card/90 px-3.5 py-2.5 text-sm text-ink-2 shadow-sm backdrop-blur hover:bg-paper-2">
                   {t.explorer.legend}

@@ -1,0 +1,230 @@
+{
+  "$comment": "Animated story of the dossier. Single source for the on-screen captions, the voice-over and (through story-timing.json) the timing of the visuals. After any change to a cue, run: npm run story:audio -- norwich-1144. Each line must stay faithful to nodes.ts and sources.ts. `say` overrides what the voice reads (pronunciation, years), never what is shown.",
+  "voices": {
+    "fr": { "lang": "f", "voice": "ff_siwis", "speed": 1.0 },
+    "en": { "lang": "a", "voice": "af_heart", "speed": 1.0 }
+  },
+  "lead": 1.2,
+  "gap": 0.55,
+  "sceneGap": 1.6,
+  "tail": 4,
+  "scenes": [
+    { "id": "accusation", "label": { "fr": "L'accusation", "en": "The accusation" } },
+    { "id": "norwich", "label": { "fr": "Norwich, 1144", "en": "Norwich, 1144" } },
+    { "id": "thomas", "label": { "fr": "Le premier récit", "en": "The first narrative" } },
+    { "id": "context", "label": { "fr": "Pourquoi ce récit ?", "en": "Why this story?" } },
+    { "id": "document", "label": { "fr": "Interroger le document", "en": "Questioning the document" } },
+    { "id": "claims", "label": { "fr": "Confronter les affirmations", "en": "Weighing the claims" } },
+    { "id": "spread", "label": { "fr": "La propagation", "en": "The spread" } },
+    { "id": "rejected", "label": { "fr": "Rejetée dès le Moyen Âge", "en": "Rejected in the Middle Ages" } },
+    { "id": "conclusion", "label": { "fr": "Ce que l'on sait", "en": "What we know" } },
+    { "id": "method", "label": { "fr": "La méthode", "en": "The method" } }
+  ],
+  "cues": [
+    {
+      "id": "quote", "scene": "accusation",
+      "fr": "Une accusation a traversé neuf siècles : des Juifs tueraient des enfants chrétiens, lors de rites secrets.",
+      "en": "An accusation has travelled across nine centuries: that Jews kill Christian children in secret rites."
+    },
+    {
+      "id": "questions", "scene": "accusation",
+      "fr": "D'où vient cette idée ? Sur quoi repose-t-elle ? Pour le savoir, il faut remonter à sa source.",
+      "en": "Where does this idea come from? What does it rest on? To find out, we have to go back to its source."
+    },
+
+    {
+      "id": "death", "scene": "norwich",
+      "fr": "Norwich, en Angleterre, Semaine sainte 1144. Le corps de Guillaume, un apprenti d'environ douze ans, est découvert dans un bois, au nord de la ville.",
+      "en": "Norwich, England, Holy Week 1144. The body of William, an apprentice of about twelve, is found in a wood north of the town.",
+      "say": { "en": "[Norwich](/nˈɔɹɪʧ/), England, Holy Week, eleven forty-four. The body of William, an apprentice of about twelve, is found in a wood north of the town." }
+    },
+    {
+      "id": "killer", "scene": "norwich",
+      "fr": "Sa mort est un fait établi. Son meurtrier, lui, reste inconnu.",
+      "en": "His death is an established fact. His killer remains unknown."
+    },
+    {
+      "id": "sheriff", "scene": "norwich",
+      "fr": "Selon un récit écrit plus tard, sa famille accuse les Juifs de la ville. Le shérif les met à l'abri au château.",
+      "en": "According to an account written later, his family accuses the town's Jews. The sheriff shelters them in the castle."
+    },
+
+    {
+      "id": "silence", "scene": "thomas",
+      "fr": "Ensuite, pendant six ans, aucun document ne parle de l'affaire.",
+      "en": "Then, for six years, no document mentions the case."
+    },
+    {
+      "id": "vita", "scene": "thomas",
+      "fr": "Vers 1150, un moine arrivé à Norwich après les faits, Thomas de Monmouth, écrit la Vie et Passion de Guillaume.",
+      "en": "Around 1150, a monk who came to Norwich after the events, Thomas of Monmouth, writes the Life and Passion of William.",
+      "say": { "en": "Around eleven fifty, a monk who came to [Norwich](/nˈɔɹɪʧ/) after the events, Thomas of Monmouth, writes the Life and Passion of William." }
+    },
+    {
+      "id": "ritual", "scene": "thomas",
+      "fr": "C'est lui qui affirme que des Juifs ont tué l'enfant en imitant la crucifixion. C'est le premier récit connu de « meurtre rituel ».",
+      "en": "He is the one who claims that Jews killed the boy by imitating the crucifixion. It is the first known “ritual murder” narrative."
+    },
+
+    {
+      "id": "why", "scene": "context",
+      "fr": "Pourquoi ce récit, et pourquoi à ce moment-là ? Le contexte éclaire l'affaire.",
+      "en": "Why this story, and why then? The context sheds light on the case."
+    },
+    {
+      "id": "anarchy", "scene": "context",
+      "fr": "L'Angleterre est en pleine guerre civile, l'Anarchie, et l'Europe se mobilise pour la deuxième croisade.",
+      "en": "England is in the middle of a civil war, the Anarchy, and Europe is mobilising for the Second Crusade."
+    },
+    {
+      "id": "lenders", "scene": "context",
+      "fr": "Les Juifs, arrivés après 1066, vivent sous la protection du roi et prêtent de l'argent, ce qui les expose au ressentiment de leurs débiteurs.",
+      "en": "The Jews, who arrived after 1066, live under royal protection and lend money, which exposes them to the resentment of their debtors.",
+      "say": { "en": "The Jews, who arrived after ten sixty-six, live under royal protection and lend money, which exposes them to the resentment of their debtors." }
+    },
+    {
+      "id": "novers", "scene": "context",
+      "fr": "Vers 1150, un chevalier endetté, Simon de Novers, est jugé pour le meurtre de son banquier juif. Selon l'historienne E. M. Rose, l'histoire de l'enfant aurait été avancée pour retourner l'accusation. C'est une interprétation, discutée.",
+      "en": "Around 1150, an indebted knight, Simon de Novers, is tried for the murder of his Jewish banker. According to the historian E. M. Rose, the boy's story was put forward to turn the accusation around. It is an interpretation, and it is debated.",
+      "say": { "en":"Around eleven fifty, an indebted knight, Simon de Novers, is tried for the murder of his Jewish banker. According to the historian E. M. Rose, the boy's story was put forward to turn the accusation around. It is an interpretation, and it is debated." }
+    },
+    {
+      "id": "cult", "scene": "context",
+      "fr": "Et Thomas, lui, veut faire de Guillaume un saint, dont le tombeau attirerait les pèlerins.",
+      "en": "As for Thomas, he wants to make William a saint, whose tomb would draw pilgrims."
+    },
+
+    {
+      "id": "single", "scene": "document",
+      "fr": "Presque tout repose sur ce seul manuscrit. Interrogeons-le, en trois questions.",
+      "en": "Almost everything rests on this single manuscript. Let us question it, in three steps."
+    },
+    {
+      "id": "readA", "scene": "document",
+      "fr": "Un : est-il authentique ? Oui. C'est bien un manuscrit du douzième siècle.",
+      "en": "One: is it authentic? Yes. It really is a twelfth-century manuscript."
+    },
+    {
+      "id": "readB", "scene": "document",
+      "fr": "Deux : que dit-il, et qui parle ? Un auteur engagé, qui écrit des années après, sans avoir rien vu. Ses témoins sont tardifs et indirects.",
+      "en": "Two: what does it say, and who is speaking? A committed author, writing years later, who saw nothing. His witnesses are late and second-hand."
+    },
+    {
+      "id": "readC", "scene": "document",
+      "fr": "Trois : que prouve-t-il ? Que l'accusation existait vers 1150. Pas que le meurtre a eu lieu.",
+      "en": "Three: what does it prove? That the accusation existed around 1150. Not that the murder took place.",
+      "say": { "en": "Three: what does it prove? That the accusation existed around eleven fifty. Not that the murder took place." }
+    },
+    {
+      "id": "copies", "scene": "document",
+      "fr": "Les éditions et les traductions dérivent de ce même manuscrit, et la chronique de Peterborough en dépend sans doute. Une copie n'est pas un second témoin.",
+      "en": "The editions and translations derive from this same manuscript, and the Peterborough Chronicle probably depends on it. A copy is not a second witness."
+    },
+
+    {
+      "id": "oneByOne", "scene": "claims",
+      "fr": "Reprenons maintenant chaque affirmation, une par une.",
+      "en": "Now let us take each claim, one by one."
+    },
+    {
+      "id": "clCirculated", "scene": "claims",
+      "fr": "Que l'accusation circulait vers 1150 : établi.",
+      "en": "That the accusation was circulating around 1150: established.",
+      "say": { "en": "That the accusation was circulating around eleven fifty: established." }
+    },
+    {
+      "id": "clKilled", "scene": "claims",
+      "fr": "Que des Juifs aient tué Guillaume : non démontré.",
+      "en": "That Jews killed William: not demonstrated."
+    },
+    {
+      "id": "clCrucifixion", "scene": "claims",
+      "fr": "Qu'ils aient reproduit la crucifixion : non démontré. C'est une construction du récit.",
+      "en": "That they re-enacted the crucifixion: not demonstrated. It is a construction of the narrative."
+    },
+    {
+      "id": "clBlood", "scene": "claims",
+      "fr": "Qu'ils utilisent du sang : réfuté. La loi juive interdit le sang, et dès le treizième siècle, un empereur puis un pape le reconnaissent.",
+      "en": "That they used blood: refuted. Jewish law forbids blood, and in the thirteenth century an emperor, then a pope, acknowledged it."
+    },
+
+    {
+      "id": "travels", "scene": "spread",
+      "fr": "Le récit, lui, voyage.",
+      "en": "The story, however, travels."
+    },
+    {
+      "id": "england", "scene": "spread",
+      "fr": "Gloucester, 1168. Blois, 1171 : le premier cas hors d'Angleterre. Bury St Edmunds, 1181.",
+      "en": "Gloucester, 1168. Blois, 1171: the first case outside England. Bury St Edmunds, 1181.",
+      "say": { "fr": "Glosteur, 1168. Blois, 1171 : le premier cas hors d'Angleterre. Béri Saint-Edmonds, 1181.", "en": "Gloucester, eleven sixty-eight. Blois, eleven seventy-one: the first case outside England. Bury Saint Edmunds, eleven eighty-one." }
+    },
+    {
+      "id": "blood", "scene": "spread",
+      "fr": "À Fulda, en 1235, un élément nouveau apparaît : le sang. Puis Lincoln, en 1255, où pour la première fois, la Couronne donne crédit à l'accusation.",
+      "en": "In Fulda, in 1235, a new element appears: blood. Then Lincoln, in 1255, where for the first time the Crown lends credit to the accusation.",
+      "say": { "en": "In Fulda, in twelve thirty-five, a new element appears: blood. Then Lincoln, in twelve fifty-five, where for the first time the Crown lends credit to the accusation." }
+    },
+    {
+      "id": "trent", "scene": "spread",
+      "fr": "Jusqu'à Trente, en 1475, où des « aveux » sont arrachés sous la torture.",
+      "en": "All the way to Trent, in 1475, where “confessions” are extracted under torture.",
+      "say": { "en": "All the way to Trent, in fourteen seventy-five, where confessions are extracted under torture." }
+    },
+    {
+      "id": "victims", "scene": "spread",
+      "fr": "Derrière chaque point, des communautés frappées : une trentaine de personnes brûlées à Blois, trente-quatre à Fulda, dix-huit exécutées à Lincoln.",
+      "en": "Behind each dot, communities struck: some thirty people burned at Blois, thirty-four at Fulda, eighteen executed at Lincoln."
+    },
+    {
+      "id": "links", "scene": "spread",
+      "fr": "Attention : ces liens sont proposés par des historiens, ou ce sont de simples ressemblances. Aucune filiation n'est attestée par un document d'époque.",
+      "en": "Careful: these links are either proposed by historians or mere resemblances. No lineage is attested by a period document."
+    },
+
+    {
+      "id": "authorities", "scene": "rejected",
+      "fr": "Pourtant, dès le Moyen Âge, des autorités rejettent l'accusation.",
+      "en": "Yet already in the Middle Ages, authorities rejected the accusation."
+    },
+    {
+      "id": "frederick", "scene": "rejected",
+      "fr": "En 1236, l'empereur Frédéric II fait interroger des Juifs convertis : aucun rite juif ne requiert de sang. En 1247, le pape Innocent IV condamne ces accusations.",
+      "en": "In 1236, Emperor Frederick the Second has Jewish converts questioned: no Jewish rite requires blood. In 1247, Pope Innocent the Fourth condemns these accusations.",
+      "say": { "fr": "En 1236, l'empereur Frédéric Deux fait interroger des Juifs convertis : aucun rite juif ne requiert de sang. En 1247, le pape Innocent Quatre condamne ces accusations.", "en": "In twelve thirty-six, Emperor Frederick the Second has Jewish converts questioned: no Jewish rite requires blood. In twelve forty-seven, Pope Innocent the Fourth condemns these accusations." }
+    },
+    {
+      "id": "abolition", "scene": "rejected",
+      "fr": "Et en 1965, l'Église abolit le culte de Simon de Trente.",
+      "en": "And in 1965, the Church abolishes the cult of Simon of Trent.",
+      "say": { "en": "And in nineteen sixty-five, the Church abolishes the cult of Simon of Trent." }
+    },
+
+    {
+      "id": "verdict", "scene": "conclusion",
+      "fr": "Alors, que peut-on conclure ? Aucun meurtre rituel juif n'a jamais été démontré. L'accusation est réfutée.",
+      "en": "So what can we conclude? No Jewish ritual murder has ever been demonstrated. The accusation is refuted."
+    },
+    {
+      "id": "unknowns", "scene": "conclusion",
+      "fr": "Il reste des inconnues : qui a tué Guillaume, et comment le récit a voyagé.",
+      "en": "Some unknowns remain: who killed William, and how the story travelled."
+    },
+    {
+      "id": "lesson", "scene": "conclusion",
+      "fr": "Les reconnaître n'affaiblit pas la conclusion : on peut ignorer le nom d'un meurtrier, et savoir qu'une accusation est fausse.",
+      "en": "Acknowledging them does not weaken the conclusion: one can be unsure who the killer was, and still know an accusation is false."
+    },
+
+    {
+      "id": "method", "scene": "method",
+      "fr": "Une accusation peut naître d'un récit, sans aucune preuve. Pour la juger : remonter à la source, interroger chaque document, et séparer ce qui est établi de ce qui est seulement affirmé.",
+      "en": "An accusation can be born of a story, without any proof. To judge it: go back to the source, question every document, and separate what is established from what is merely asserted."
+    },
+    {
+      "id": "explore", "scene": "method",
+      "fr": "Toutes les sources de cette histoire sont dans le dossier. À vous d'explorer.",
+      "en": "Every source behind this story is in the dossier. Over to you."
+    }
+  ]
+}

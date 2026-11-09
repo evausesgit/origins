@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/SiteFooter";
 import { StatusBadge, StatusGlyph } from "@/components/Status";
 import { dossiers, indexDossier, type Dossier } from "@/data";
+import { getStory } from "@/data/stories";
 import type { Locale } from "@/data/types";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { computeLayout } from "@/lib/layout";
@@ -147,6 +148,11 @@ function DossierCard({ d, lang }: { d: Dossier; lang: Locale }) {
           <Link href={`${base}#narration`} className="rounded-full border border-ink/20 px-6 py-3 text-sm font-medium text-ink hover:bg-paper-2">
             ▶ {t.home.understand3}
           </Link>
+          {getStory(d.slug) && (
+            <Link href={`${base}/histoire`} className="rounded-full border border-ink/20 px-6 py-3 text-sm font-medium text-ink hover:bg-paper-2">
+              ◉ {t.story.watch}
+            </Link>
+          )}
         </div>
       </div>
       <Link href={base} aria-label={t.home.explore} className="relative hidden min-h-[420px] border-l border-rule-2 bg-paper-2/40 lg:block">
