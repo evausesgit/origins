@@ -62,7 +62,8 @@ Détails techniques : [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 2. Variable d'environnement : `NEXT_PUBLIC_SITE_URL=https://votre-domaine` (sert aux URLs canoniques et Open Graph).
 3. Déployer. Aucune autre configuration n'est nécessaire en phase 1 : pas de base, pas de secret.
 
-### Coolify (ou tout hébergeur Node)
+### Coolify (production actuelle : https://origines.ia-do-it.com)
 
-- Build pack Nixpacks, commande de build `npm run build`, commande de démarrage `npm start` (port 3000).
-- Même variable `NEXT_PUBLIC_SITE_URL`, à définir **avant** le build : elle est intégrée aux pages prérendues.
+- Build pack **Dockerfile** (`/Dockerfile`, Node 22, sortie `standalone`, port 3000, utilisateur non-root, healthcheck).
+- `NEXT_PUBLIC_SITE_URL` vaut `https://origines.ia-do-it.com` par défaut (`ARG` du Dockerfile). Si le domaine change, passer la variable **au build** : elle est intégrée aux pages prérendues.
+- Redéployer : `POST /api/v1/applications/{uuid}/start` sur l'API Coolify (pas de webhook automatique).
